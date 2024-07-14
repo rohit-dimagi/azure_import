@@ -69,7 +69,10 @@ def should_remove_line(line, resource_type, custom_pattern=[]):
         patterns = custom_pattern
 
     for pattern in patterns:
-        if "min_size" in line and resource_type in ("aws_autoscaling_group", "aws_eks_node_group"):  # for EKS Cluster aws_autoscaling_group, aws_eks_node_group
+        if "min_size" in line and resource_type in (
+            "aws_autoscaling_group",
+            "aws_eks_node_group",
+        ):  # for EKS Cluster aws_autoscaling_group, aws_eks_node_group
             return False
         if re.search(pattern, line):
             return True
@@ -107,7 +110,9 @@ def process_terraform_plan(input_file):
 
         # Process lines within a resource block
         if in_resource_block and current_resource_type:
-            if current_resource_type == "aws_ebs_volume":  # EDGE case for removing iops when type is gp2
+            if (
+                current_resource_type == "aws_ebs_volume"
+            ):  # EDGE case for removing iops when type is gp2
                 if "iops" in line:
                     is_iops_set = True
                     get_iops_line = line

@@ -42,7 +42,7 @@ class Utilities:
         except Exception as e:
             logger.error(f"Error occured: {e}")
             sys.exit(1)
-       
+
     def run_terraform_cmd(cmd):
         print(cmd)
         try:
