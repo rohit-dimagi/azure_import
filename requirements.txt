@@ -1,0 +1,8 @@
+azure-mgmt-resource 
+azure-mgmt-compute 
+azure-mgmt-storage 
+azure-mgmt-containerservice
+azure-identity 
+azure-storage-blob
+jinja2
+loguru
