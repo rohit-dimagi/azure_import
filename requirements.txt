@@ -3,6 +3,8 @@ azure-mgmt-compute
 azure-mgmt-storage 
 azure-mgmt-containerservice
 azure-identity 
-azure-storage-blob
+azure-mgmt-sql
+azure-mgmt-rdbms
+
 jinja2
 loguru
