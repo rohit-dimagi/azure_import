@@ -19,6 +19,8 @@ RESOURCE_CLEANUP = {
         "= 0",
         "= \[\]",
     ],
+    "azurerm_mssql_database": ["= 0", "\[\]", "max_size_gb", "transparent_data_encryption_key_automatic_rotation_enabled"],
+    "azurerm_mssql_server": ["= 0", "administrator_login"]
 }
 
 
@@ -69,15 +71,9 @@ def should_remove_line(line, resource_type, custom_pattern=[]):
         patterns = custom_pattern
 
     for pattern in patterns:
-        if "min_size" in line and resource_type in (
-            "aws_autoscaling_group",
-            "aws_eks_node_group",
-        ):  # for EKS Cluster aws_autoscaling_group, aws_eks_node_group
-            return False
         if re.search(pattern, line):
             return True
     return False
-
 
 def process_terraform_plan(input_file):
     with open(input_file, "r") as file:
@@ -86,10 +82,6 @@ def process_terraform_plan(input_file):
     new_lines = []
     in_resource_block = False
     current_resource_type = None
-
-    # Special case ebs_volume Cleanup, Removing iops when type is gp2
-    is_iops_set = False
-    is_gp2_set = False
 
     for line in lines:
         # Check if the line starts a new resource block
@@ -110,19 +102,9 @@ def process_terraform_plan(input_file):
 
         # Process lines within a resource block
         if in_resource_block and current_resource_type:
-            if (
-                current_resource_type == "aws_ebs_volume"
-            ):  # EDGE case for removing iops when type is gp2
-                if "iops" in line:
-                    is_iops_set = True
-                    get_iops_line = line
-                if "gp2" in line:
-                    is_gp2_set = True
-                if is_gp2_set and is_iops_set:
-                    new_lines.remove(get_iops_line)
-                    is_iops_set = False
-                    is_gp2_set = False
-
+            if current_resource_type == "azurerm_mssql_server": #Special Case for Jsonencode Skipping decimal in version number fix
+                if "jsonencode(12)" in line:
+                    line = 'version      = "12.0"\n'
             if should_remove_line(line, current_resource_type):
                 continue
         new_lines.append(line)

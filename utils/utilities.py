@@ -9,7 +9,11 @@ from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.containerservice import ContainerServiceClient
 from azure.mgmt.resource import ResourceManagementClient
-
+from azure.mgmt.sql import SqlManagementClient
+from azure.mgmt.rdbms.mysql import MySQLManagementClient
+from azure.mgmt.rdbms.mysql_flexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
+from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
+from azure.mgmt.rdbms.postgresql_flexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
 
 class SkipTag(Enum):
     """
@@ -33,6 +37,14 @@ class Utilities:
                 client = ComputeManagementClient(credential, subscription_id)
             elif resource == "aks":
                 client = ContainerServiceClient(credential, subscription_id)
+            elif resource == "sql":
+                client = SqlManagementClient(credential, subscription_id)
+            elif resource == "mysql":
+                client, flxclient = [MySQLManagementClient(credential, subscription_id),MySQLFlexibleManagementClient(credential, subscription_id)]
+                return client, flxclient
+            elif resource == "postgresql":
+                client, flxclient = [PostgreSQLManagementClient(credential, subscription_id),PostgreSQLFlexibleManagementClient(credential, subscription_id)]
+                return client, flxclient
             elif resource == "resource_group":
                 client = ResourceManagementClient(credential, subscription_id)
             else:
