@@ -1,0 +1,83 @@
+{%- if platform == "mysql" %}
+
+{%- if type == "single" %}
+import{
+    to = azurerm_mysql_server.{{ instance_name }} 
+    id =  "{{ instance_id }}"
+}
+
+{% for db in db_list %}
+import{
+    to = azurerm_mysql_database.{{ instance_name }}_{{ db.db_name }} 
+    id =  "{{ db.db_id }}"
+}
+{%- endfor %}
+{%- endif %}
+
+{%- if type == "flexible" %}
+import{
+    to = azurerm_mysql_flexible_server.{{ instance_name }} 
+    id =  "{{ instance_id }}"
+}
+
+{% for db in db_list %}
+import{
+    to = azurerm_mysql_flexible_database.{{ instance_name }}_{{ db.db_name }} 
+    id =  "{{ db.db_id }}"
+}
+{%- endfor %}
+
+{%- endif %}
+
+{%- endif %}
+
+
+
+{%- if platform == "postgresql" %}
+
+{%- if type == "single" %}
+import{
+    to = azurerm_postgresql_server.{{ instance_name }} 
+    id =  "{{ instance_id }}"
+}
+
+{% for db in db_list %}
+import{
+    to = azurerm_postgresql_database.{{ instance_name }}_{{ db.db_name }} 
+    id =  "{{ db.db_id }}"
+}
+{%- endfor %}
+{%- endif %}
+
+{%- if type == "flexible" %}
+import{
+    to = azurerm_postgresql_flexible_server.{{ instance_name }} 
+    id =  "{{ instance_id }}"
+}
+
+{% for db in db_list %}
+import{
+    to = azurerm_postgresql_flexible_server_database.{{ instance_name }}_{{ db.db_name }} 
+    id =  "{{ db.db_id }}"
+}
+{%- endfor %}
+
+{%- endif %}
+
+{%- endif %}
+
+
+{%- if platform == "sql" %}
+
+import{
+    to = azurerm_mssql_server.{{ instance_name }} 
+    id =  "{{ instance_id }}"
+}
+
+{% for db in db_list %}
+import{
+    to = azurerm_mssql_database.{{ instance_name }}_{{ db.db_name }} 
+    id =  "{{ db.db_id }}"
+}
+{%- endfor %}
+{%- endif %}
