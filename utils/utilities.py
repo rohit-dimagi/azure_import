@@ -14,6 +14,7 @@ from azure.mgmt.rdbms.mysql import MySQLManagementClient
 from azure.mgmt.rdbms.mysql_flexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
 from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
 from azure.mgmt.rdbms.postgresql_flexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
+from azure.mgmt.network import NetworkManagementClient
 
 class SkipTag(Enum):
     """
@@ -45,6 +46,8 @@ class Utilities:
             elif resource == "postgresql":
                 client, flxclient = [PostgreSQLManagementClient(credential, subscription_id),PostgreSQLFlexibleManagementClient(credential, subscription_id)]
                 return client, flxclient
+            elif resource in ["lbgw", "lb"]:
+                client = NetworkManagementClient(credential, subscription_id)
             elif resource == "resource_group":
                 client = ResourceManagementClient(credential, subscription_id)
             else:

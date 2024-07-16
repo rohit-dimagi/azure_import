@@ -3,6 +3,7 @@ import argparse
 from import_vm import VMSImportSetUp
 from import_aks import AKSImportSetUp
 from import_azuredb import AzureDBImportSetUp
+from import_alb import ALBImportSetUp
 from loguru import logger
 
 if __name__ == "__main__":
@@ -24,5 +25,8 @@ if __name__ == "__main__":
     elif args.resource in ["mysql", "postgresql", "sql"]:
         azuredb_import = AzureDBImportSetUp(subscription_id=args.subscription_id, region=args.region, resource=args.resource, local_repo_path=args.local_repo_path, filters=args.tag)
         azuredb_import.set_everything()
+    elif args.resource in ["lbgw", "lb"]:
+        alb_import = ALBImportSetUp(subscription_id=args.subscription_id, region=args.region, resource=args.resource, local_repo_path=args.local_repo_path, filters=args.tag)
+        alb_import.set_everything()
     else:
         logger.info(f"Import Not currently supported for {args.resource}")
