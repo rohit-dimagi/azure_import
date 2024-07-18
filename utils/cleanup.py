@@ -8,7 +8,7 @@ import subprocess
 RESOURCE_CLEANUP = {
     "global": ["null"],
     "multiline_pattern": [
-        r"os_profile\s*\{\s*\n\s*\}",
+        r"os_profile\s*\{\s*\n\s*\}"
     ],
     "azurerm_virtual_machine": ["= 0", "os_profile"],
     "azurerm_kubernetes_cluster": [
@@ -20,12 +20,13 @@ RESOURCE_CLEANUP = {
         "= \[\]",
     ],
     "azurerm_mssql_database": ["= 0", "\[\]", "max_size_gb", "transparent_data_encryption_key_automatic_rotation_enabled"],
-    "azurerm_mssql_server": ["= 0", "administrator_login"]
+    "azurerm_mssql_server": ["= 0", "administrator_login"],
+    "azurerm_application_gateway": ["= 0", "ssl_certificate {} # sensitive"]
 }
 
 
 def remove_global_lines(tf_file, list_to_cleanup):
-    output_file = tf_file  # f"{tf_file}-global-cleanup.tf"
+    output_file = tf_file 
     logger.info(f"Removing lines containing following items: {list_to_cleanup}")
 
     with open(tf_file, "r") as readfile:
@@ -34,10 +35,6 @@ def remove_global_lines(tf_file, list_to_cleanup):
 
         for line in lines:
             if any(element in line for element in list_to_cleanup):
-                # If 'Condition' is in the line and '= {}' is one of the elements, do not remove it.
-                # Special rule for aws_iam_role properties assume_role_policy of jsonencode block.
-                if "= {}" in line and "Condition" in line:
-                    filtered_lines.append(line)
                 continue
             filtered_lines.append(line)
 
@@ -105,6 +102,13 @@ def process_terraform_plan(input_file):
             if current_resource_type == "azurerm_mssql_server": #Special Case for Jsonencode Skipping decimal in version number fix
                 if "jsonencode(12)" in line:
                     line = 'version      = "12.0"\n'
+            if current_resource_type == "azurerm_application_gateway": #Special Case for Jsonencode Skipping decimal in version number fix
+                if "jsonencode(3)" in line:
+                    line = 'rule_set_version      = "3.0"\n'
+            if current_resource_type == "azurerm_application_gateway": #Special Case for preserving min_capacity = 0
+                if "min_capacity" in line:
+                    new_lines.append(line)
+                    continue
             if should_remove_line(line, current_resource_type):
                 continue
         new_lines.append(line)
@@ -113,7 +117,6 @@ def process_terraform_plan(input_file):
     with open(input_file, "w") as new_file:
         new_file.writelines(new_lines)
 
-    # logger.info(f"Cleanup Resources with Patterns: {RESOURCE_CLEANUP}")
     logger.info(f"Generated Cleaned up File: {input_file}")
 
 
@@ -124,4 +127,5 @@ def cleanup_tf_plan_file(input_tf_file):
 
     # Process resource Specific Blocks
     process_terraform_plan(level1_cleanup_file)
+    
     remove_multiline(input_tf_file, RESOURCE_CLEANUP["multiline_pattern"])

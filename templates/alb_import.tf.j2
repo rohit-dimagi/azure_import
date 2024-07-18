@@ -13,21 +13,21 @@ import {
 
 {% for backend_pool in lb_backend_pools %}
 import {
-    to = azurerm_lb_backend_address_pool.{{ backend_pool.name }}
+    to = azurerm_lb_backend_address_pool.{{ lb_name }}_{{ backend_pool.name }}
     id = "{{ backend_pool.id }}"
 }
 {% endfor %}
 
 {% for lb_probe in lb_probes %}
 import {
-    to = azurerm_lb_probe.{{ lb_probe.name }}
+    to = azurerm_lb_probe.{{ lb_name }}_{{ lb_probe.name }}
     id = "{{ lb_probe.id }}"
 }
 {% endfor %}
 
 {% for lb_rule in lb_rules %}
 import {
-    to = azurerm_lb_rule.{{ lb_rule.name }}
+    to = azurerm_lb_rule.{{ lb_name }}_{{ lb_rule.name }}
     id = "{{ lb_rule.id }}"
 }
 {% endfor %}
