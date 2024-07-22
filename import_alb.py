@@ -50,11 +50,25 @@ class ALBImportSetUp:
                 gateway_tags = gateway.tags or {}
                 if not self._tags_match(gateway_tags):
                     continue
+                
+                # Retrieve public IP information
+                public_ip_info = []
+                for ip_config in gateway.frontend_ip_configurations:
+                    if ip_config.public_ip_address:
+                        public_ip = self.lb_client.public_ip_addresses.get(
+                            resource_group_name=gateway.resource_group,
+                            public_ip_address_name=ip_config.public_ip_address.id.split('/')[-1]
+                        )
+                        public_ip_info.append({
+                            "name": public_ip.name,
+                            "id": public_ip.id,
+                        })
 
                 lbgw = {
                     "lb_name": gateway.name,
                     "lb_id": gateway.id,
-                    "type": "gateway"
+                    "type": "gateway",
+                    "public_ip": public_ip_info
                 }
                 application_gateway_details.append(lbgw)
             
@@ -104,7 +118,7 @@ class ALBImportSetUp:
         Generate Import Blocks, Generate Terraform code, Cleanup Terraform code
         """
         if not alb_details:
-            logger.info("No LoadBalacner found: Nothing to do. Exitting")
+            logger.info(f"No {(self.resource).upper()} found: Nothing to do. Exitting")
             sys.exit(1)
 
         template = self.tmpl.get_template("alb_import.tf.j2")
@@ -125,6 +139,7 @@ class ALBImportSetUp:
                 context = {
                     "lb_name": alb_detail["lb_name"],
                     "lb_id": alb_detail["lb_id"],
+                    "public_ips": alb_detail["public_ip"],
                     "type": alb_detail["type"],
                 }
             rendered_template = template.render(context)

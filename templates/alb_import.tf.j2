@@ -3,7 +3,15 @@ import {
     to = azurerm_application_gateway.{{ lb_name }}
     id = "{{ lb_id }}"
 }
+
+{% for public_ip in public_ips %}
+import {
+    to = azurerm_public_ip.{{ lb_name }}_{{ public_ip.name }}
+    id = "{{ public_ip.id }}"
+}
+{% endfor %}
 {% endif %}
+
 
 {% if type == "load-balancer" %}
 import {
