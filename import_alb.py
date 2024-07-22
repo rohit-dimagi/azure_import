@@ -12,7 +12,7 @@ class ALBImportSetUp:
     Supoprted resources: Azure LB and GW.
     """
 
-    def __init__(self, subscription_id, region, resource, local_repo_path, filters):
+    def __init__(self, subscription_id, resource, local_repo_path, filters):
         self.resource = resource
         if resource in ["lbgw", "lb"]:
             self.lb_client = Utilities.create_client(subscription_id=subscription_id, resource=self.resource)
@@ -20,7 +20,6 @@ class ALBImportSetUp:
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
         self.tag_filters = {key: value for key, value in filters} if filters else {}
-        self.region = region
 
     def _tags_match(self, resource_tags):
         """
@@ -38,19 +37,19 @@ class ALBImportSetUp:
         """
         Get details of all Azure Application Gateways in the subscription, applying tag filters.
         """
-        
-        
+
+
         if self.resource == "lbgw":
             application_gateway_details = []
 
             # List all application gateways in the subscription
             app_gateways = self.lb_client.application_gateways.list_all()
-            
+
             for gateway in app_gateways:
                 gateway_tags = gateway.tags or {}
                 if not self._tags_match(gateway_tags):
                     continue
-                
+
                 # Retrieve public IP information
                 public_ip_info = []
                 for ip_config in gateway.frontend_ip_configurations:
@@ -71,21 +70,21 @@ class ALBImportSetUp:
                     "public_ip": public_ip_info
                 }
                 application_gateway_details.append(lbgw)
-            
+
             logger.info(f"Total Application Gateway to Import: {len(application_gateway_details)}")
             return application_gateway_details
-        
+
         if self.resource == "lb":
             load_balancer_details = []
 
             # List all application gateways in the subscription
             lbs = self.lb_client.load_balancers.list_all()
-            
+
             for load_balancer in lbs:
                 load_balancer_tags = load_balancer.tags or {}
                 if not self._tags_match(load_balancer_tags):
                     continue
-                
+
                 backend_pools = [
                     {"name": pool.name, "id": pool.id}
                     for pool in load_balancer.backend_address_pools
@@ -174,11 +173,11 @@ class ALBImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
-        Utilities.generate_tf_provider(self.local_repo_path, region=self.region)
+        Utilities.generate_tf_provider(self.local_repo_path)
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "init"])
 
         alb = self.get_alb_details()
-     
+
         self.generate_import_blocks(alb)
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "fmt"])
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "plan"])

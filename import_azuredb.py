@@ -12,19 +12,18 @@ class AzureDBImportSetUp:
     Supoprted resources: Azure Database for PAAS , IAAS
     """
 
-    def __init__(self, subscription_id, region, resource, local_repo_path, filters):
+    def __init__(self, subscription_id, resource, local_repo_path, filters):
         self.resource = resource
         if resource == "mysql":
             self.mysql_client, self.mysql_flexible_client = Utilities.create_client(subscription_id=subscription_id, resource='mysql')
         if resource == "postgresql":
             self.postgresql_client, self.postgresql_flexible_client = Utilities.create_client(subscription_id=subscription_id, resource='postgresql')
         if resource == "sql":
-            self.sql_client = Utilities.create_client(subscription_id=subscription_id, resource=self.resource) 
+            self.sql_client = Utilities.create_client(subscription_id=subscription_id, resource=self.resource)
         self.tmpl = Environment(loader=FileSystemLoader("templates"))
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
         self.tag_filters = {key: value for key, value in filters} if filters else {}
-        self.region = region
 
     def _tags_match(self, resource_tags):
         """
@@ -229,7 +228,7 @@ class AzureDBImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
-        Utilities.generate_tf_provider(self.local_repo_path, region=self.region)
+        Utilities.generate_tf_provider(self.local_repo_path)
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "init"])
 
         databases = self.get_databases()

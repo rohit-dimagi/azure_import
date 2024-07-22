@@ -12,7 +12,7 @@ class AKSImportSetUp:
     Supoprted resources: AKS, Addons, NodePools, ScaleSet
     """
 
-    def __init__(self, subscription_id, region, resource, local_repo_path, filters):
+    def __init__(self, subscription_id, resource, local_repo_path, filters):
         self.aks_client = Utilities.create_client(
             subscription_id=subscription_id,
             resource=resource,
@@ -21,7 +21,6 @@ class AKSImportSetUp:
             subscription_id, resource="resource_group"
         )
         self.tmpl = Environment(loader=FileSystemLoader("templates"))
-        self.region = region
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
         self.tag_filters = {key: value for key, value in filters} if filters else {}
@@ -133,7 +132,7 @@ class AKSImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
-        Utilities.generate_tf_provider(self.local_repo_path, region=self.region)
+        Utilities.generate_tf_provider(self.local_repo_path)
         Utilities.run_terraform_cmd(
             ["terraform", f"-chdir={self.local_repo_path}", "init"]
         )

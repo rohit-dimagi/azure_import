@@ -14,12 +14,11 @@ class VMSImportSetUp:
     Supoprted resources: VMS, DISK, DISK ATTACHMENTS, EXTENTIONS
     """
 
-    def __init__(self, subscription_id, region, resource, local_repo_path, filters):
+    def __init__(self, subscription_id, resource, local_repo_path, filters):
         self.resource = resource
         self.client = Utilities.create_client(subscription_id = subscription_id, resource=self.resource)
         self.network_client = Utilities.create_client(subscription_id=subscription_id, resource="lb")
         self.tmpl = Environment(loader=FileSystemLoader("templates"))
-        self.region = region   
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
         self.tag_filters = {key: value for key, value in filters} if filters else {}
@@ -54,7 +53,7 @@ class VMSImportSetUp:
 
             if tags_match:
                 os_type = "windows" if vm.storage_profile.os_disk.os_type == "Windows" else "linux"
-                
+
                 # Get NIC information
                 nic_ids = [nic.id for nic in vm.network_profile.network_interfaces]
                 nics = []
@@ -65,7 +64,7 @@ class VMSImportSetUp:
                         'name': nic.name,
                         'id': nic.id,
                     })
-                    
+
                 # Get Data Disks
                 data_disks = [
                     {
@@ -94,10 +93,10 @@ class VMSImportSetUp:
                 }
                 vms_details.append(vm_detail)
 
-        logger.info(f"Total VMS to Import: {len(vms_details)}")  
+        logger.info(f"Total VMS to Import: {len(vms_details)}")
         return vms_details
 
-    
+
     def generate_import_blocks(self, vms_details):
         """
         Generate Import Blocks, Generate Terraform code, Cleanup Terraform code
@@ -140,7 +139,7 @@ class VMSImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
-        Utilities.generate_tf_provider(self.local_repo_path, region=self.region)
+        Utilities.generate_tf_provider(self.local_repo_path)
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "init"])
 
         instances = self.describe_vms()
