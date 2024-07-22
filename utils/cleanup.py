@@ -7,10 +7,11 @@ import subprocess
 # Define the RESOURCE_CLEANUP dictionary with patterns properly escaped
 RESOURCE_CLEANUP = {
     "global": ["null"],
-    "multiline_pattern": [
-        r"os_profile\s*\{\s*\n\s*\}"
-    ],
-    "azurerm_virtual_machine": ["= 0", "os_profile"],
+    "multiline_pattern": [],
+    "azurerm_windows_virtual_machine": ["= 0", "os_profile {} # sensitive", "platform_fault_domain"],
+    "azurerm_managed_disk": ["= 0"],
+    "azurerm_network_interface": ["= \[\]"],
+    "azurerm_virtual_machine_extension": ["= \[\]","\{\}"],
     "azurerm_kubernetes_cluster": [
         "= 0",
         "= \[\]",
@@ -34,6 +35,9 @@ def remove_global_lines(tf_file, list_to_cleanup):
         filtered_lines = []
 
         for line in lines:
+            if "admin_password" in line: # Skip the null value for admin_password for windows
+                filtered_lines.append(line)
+                continue
             if any(element in line for element in list_to_cleanup):
                 continue
             filtered_lines.append(line)
@@ -109,6 +113,17 @@ def process_terraform_plan(input_file):
                 if "min_capacity" in line:
                     new_lines.append(line)
                     continue
+            if current_resource_type == "azurerm_windows_virtual_machine":
+                if "admin_password" in line:
+                    logger.error(f"admin_password is set to a random value :- Ericsson@123. Please Change it correct value before Running apply")
+                    line = 'admin_password      = "Ericsson@123"\n'
+            if current_resource_type == "azurerm_virtual_machine_extension":
+                if "jsonencode(1)" in line:
+                    line = 'type_handler_version      = "1.0"\n'
+                if "jsonencode(2)" in line:
+                    line = 'type_handler_version      = "2.0"\n'
+                if "jsonencode(3)" in line:
+                    line = 'type_handler_version      = "3.0"\n'
             if should_remove_line(line, current_resource_type):
                 continue
         new_lines.append(line)

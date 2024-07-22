@@ -1,0 +1,40 @@
+{% if os_type == "linux"%}
+import {
+  to = azurerm_linux_virtual_machine.{{ vm_name | replace(' ', '-') | lower }}
+  id = "{{ vm_id }}"
+}
+{% endif %}
+
+{% if os_type == "windows"%}
+import {
+  to = azurerm_windows_virtual_machine.{{ vm_name | replace(' ', '-') | lower }}
+  id = "{{ vm_id }}"
+}
+{% endif %}
+
+
+{% for data_disk in data_disks %}
+{% set sliced_string = data_disk.id.split('/disks/')[0] + '/' %}
+import {
+  to = azurerm_managed_disk.{{ vm_name | replace(' ', '-') | lower }}_{{ data_disk.name }}
+  id = "{{ data_disk.id }}"
+}
+import {
+  to = azurerm_virtual_machine_data_disk_attachment.{{ vm_name | replace(' ', '-') | lower }}_{{ data_disk.name }}
+  id = "{{ sliced_string }}virtualMachines/{{ vm_name | replace(' ', '-') | lower }}/dataDisks/{{ data_disk.name }}"
+}
+{% endfor %}
+
+{% for nic in nics %}
+import {
+  to = azurerm_network_interface.{{ vm_name | replace(' ', '-') | lower }}_{{ nic.name }}
+  id = "{{ nic.id }}"
+}
+{% endfor %}
+
+{% for extension in extensions %}
+import {
+  to = azurerm_virtual_machine_extension.{{ vm_name | replace(' ', '-') | lower }}_{{ extension.name | replace('.', '-') }}
+  id = "{{ extension.id }}"
+}
+{% endfor %}
