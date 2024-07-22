@@ -9,6 +9,7 @@ RESOURCE_CLEANUP = {
     "global": ["null"],
     "multiline_pattern": [],
     "azurerm_windows_virtual_machine": ["= 0", "os_profile {} # sensitive", "platform_fault_domain"],
+    "azurerm_linux_virtual_machine": ["= 0", "os_profile {} # sensitive", "platform_fault_domain"],
     "azurerm_managed_disk": ["= 0"],
     "azurerm_network_interface": ["= \[\]"],
     "azurerm_virtual_machine_extension": ["= \[\]","\{\}"],
@@ -27,7 +28,7 @@ RESOURCE_CLEANUP = {
 
 
 def remove_global_lines(tf_file, list_to_cleanup):
-    output_file = tf_file 
+    output_file = tf_file
     logger.info(f"Removing lines containing following items: {list_to_cleanup}")
 
     with open(tf_file, "r") as readfile:
@@ -142,5 +143,5 @@ def cleanup_tf_plan_file(input_tf_file):
 
     # Process resource Specific Blocks
     process_terraform_plan(level1_cleanup_file)
-    
+
     remove_multiline(input_tf_file, RESOURCE_CLEANUP["multiline_pattern"])
