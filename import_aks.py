@@ -59,23 +59,22 @@ class AKSImportSetUp:
                 )
 
                 node_pools = []
-                for pool in cluster_detail.agent_pool_profiles:
-
-                    if (
-                        pool.mode == "System"
-                    ):  # Skip nodepool if mode of nodepool is "System"
+                agent_pools = self.aks_client.agent_pools.list(rg.name, cluster.name)
+                for pool in agent_pools:
+                    if pool.mode == "System":  # Skip nodepool if mode of nodepool is "System"
                         continue
-                    node_pools.append(pool.name)
+                    node_pools.append({
+                        "name": pool.name,
+                        "id": pool.id
+                    })
 
                 cluster_info = {
                     "cluster_name": cluster_detail.name,
-                    "location": cluster_detail.location,
-                    "dns_prefix": cluster_detail.dns_prefix,
+                    "cluster_id": cluster_detail.id,
                     "node_pools": node_pools,
-                    "node_resource_group": cluster_detail.node_resource_group,
-                    "resource_group": rg.name,
                 }
                 cluster_details.append(cluster_info)
+
         logger.info(f"Total AKS Cluster Found: { len(cluster_details) }")
 
         return cluster_details
@@ -95,8 +94,7 @@ class AKSImportSetUp:
 
             context = {
                 "cluster_name": aks_cluster["cluster_name"],
-                "subscription_id": self.subscription_id,
-                "resource_group": aks_cluster["resource_group"],
+                "cluster_id": aks_cluster["cluster_id"],
                 "node_pools": aks_cluster["node_pools"],
             }
 

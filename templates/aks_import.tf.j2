@@ -1,12 +1,11 @@
 import {
   to = azurerm_kubernetes_cluster.{{ cluster_name }}
-  id = "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.ContainerService/managedClusters/{{ cluster_name }}"
+  id = "{{ cluster_id.replace('resourcegroups', 'resourceGroups') }}"
 }
-
 
 {% for node_pool in node_pools %}
 import{
-  to = azurerm_kubernetes_cluster_node_pool.{{ node_pool }}
-  id = "/subscriptions/{{ subscription_id }}/resourceGroups/{{ resource_group }}/providers/Microsoft.ContainerService/managedClusters/{{ cluster_name }}/agentPools/{{ node_pool }}"
+  to = azurerm_kubernetes_cluster_node_pool.{{ node_pool.name }}
+  id = "{{ node_pool.id }}"
 }
 {% endfor %}
