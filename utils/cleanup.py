@@ -39,6 +39,9 @@ def remove_global_lines(tf_file, list_to_cleanup):
             if "admin_password" in line: # Skip the null value for admin_password for windows
                 filtered_lines.append(line)
                 continue
+            if "client_secret = null # sensitive" in line: # Skip the null value for client_secret for AKS
+                filtered_lines.append(line)
+                continue
             if any(element in line for element in list_to_cleanup):
                 continue
             filtered_lines.append(line)
@@ -107,17 +110,31 @@ def process_terraform_plan(input_file):
             if current_resource_type == "azurerm_mssql_server": #Special Case for Jsonencode Skipping decimal in version number fix
                 if "jsonencode(12)" in line:
                     line = 'version      = "12.0"\n'
+
             if current_resource_type == "azurerm_application_gateway": #Special Case for Jsonencode Skipping decimal in version number fix
                 if "jsonencode(3)" in line:
                     line = 'rule_set_version      = "3.0"\n'
+
             if current_resource_type == "azurerm_application_gateway": #Special Case for preserving min_capacity = 0
                 if "min_capacity" in line:
                     new_lines.append(line)
                     continue
+
             if current_resource_type == "azurerm_windows_virtual_machine":
                 if "admin_password" in line:
                     logger.error(f"admin_password is set to a random value :- Ericsson@123. Please Change it correct value before Running apply")
                     line = 'admin_password      = "Ericsson@123"\n'
+
+            if current_resource_type == "azurerm_kubernetes_cluster":
+                if "client_secret" in line:
+                    logger.error(f"client_secret is set to a random value :- Ericsson@123. Please Change it correct value before Running apply")
+                    line = 'client_secret      = "Ericsson@123"\n'
+                if "identity_ids" in line:
+                    new_lines.append(line)
+                    continue
+                if "idle_timeout_in_minutes" in line:
+                    line = 'idle_timeout_in_minutes = 30\n'
+
             if current_resource_type == "azurerm_virtual_machine_extension":
                 if "jsonencode(1)" in line:
                     line = 'type_handler_version      = "1.0"\n'
@@ -125,6 +142,7 @@ def process_terraform_plan(input_file):
                     line = 'type_handler_version      = "2.0"\n'
                 if "jsonencode(3)" in line:
                     line = 'type_handler_version      = "3.0"\n'
+
             if should_remove_line(line, current_resource_type):
                 continue
         new_lines.append(line)
