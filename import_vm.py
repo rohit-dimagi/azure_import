@@ -1,7 +1,7 @@
 from utils.utilities import Utilities, SkipTag
 from utils.cleanup import cleanup_tf_plan_file
 from jinja2 import Environment, FileSystemLoader
-from azure.mgmt.compute.models import InstanceViewTypes
+from azure.core.exceptions import ResourceNotFoundError
 from loguru import logger
 import os
 import sys
@@ -16,8 +16,11 @@ class VMSImportSetUp:
 
     def __init__(self, subscription_id, resource, local_repo_path, filters):
         self.resource = resource
+
         self.client = Utilities.create_client(subscription_id = subscription_id, resource=self.resource)
         self.network_client = Utilities.create_client(subscription_id=subscription_id, resource="lb")
+        self.subscription_name = Utilities.get_subscription_name(subscription_id=subscription_id)
+
         self.tmpl = Environment(loader=FileSystemLoader("templates"))
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
@@ -36,17 +39,6 @@ class VMSImportSetUp:
 
         for vm in vms:
             resource_group_name = vm.id.split('/')[4]
-            instance_view = self.client.virtual_machines.instance_view(resource_group_name, vm.name)
-            statuses = instance_view.statuses
-            vm_state = None
-
-            for status in statuses:
-                if 'PowerState' in status.code:
-                    vm_state = status.display_status
-
-            # Skip terminated VMs
-            if vm_state in ["VM deallocated", "VM deallocating", "VM stopping", "VM stopped"]:
-                continue
 
             # Check tags
             tags_match = all(vm.tags.get(key) == value for key, value in self.tag_filters.items())
@@ -57,13 +49,16 @@ class VMSImportSetUp:
                 # Get NIC information
                 nic_ids = [nic.id for nic in vm.network_profile.network_interfaces]
                 nics = []
-                for nic_id in nic_ids:
-                    nic_name = nic_id.split('/')[-1]
-                    nic = self.network_client.network_interfaces.get(resource_group_name, nic_name)
-                    nics.append({
-                        'name': nic.name,
-                        'id': nic.id,
-                    })
+                try:
+                    for nic_id in nic_ids:
+                        nic_name = nic_id.split('/')[-1]
+                        nic = self.network_client.network_interfaces.get(resource_group_name, nic_name)
+                        nics.append({
+                            'name': nic.name,
+                            'id': nic.id,
+                        })
+                except ResourceNotFoundError as e:
+                    logger.error(f"Resource not found: {e.message}")
 
                 # Get Data Disks
                 data_disks = [
@@ -139,6 +134,10 @@ class VMSImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
+        if Utilities.skip_resources_from_settings(self.subscription_name, self.resource):
+            logger.info(f"Skipping Resources {self.resource} from subscription account {self.subscription_name}. For more info check utils/settings.py\n Exitting.")
+            sys.exit(1)
+
         Utilities.generate_tf_provider(self.local_repo_path)
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "init"])
 

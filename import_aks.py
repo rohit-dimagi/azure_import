@@ -13,13 +13,11 @@ class AKSImportSetUp:
     """
 
     def __init__(self, subscription_id, resource, local_repo_path, filters):
-        self.aks_client = Utilities.create_client(
-            subscription_id=subscription_id,
-            resource=resource,
-        )
-        self.resource_client = Utilities.create_client(
-            subscription_id, resource="resource_group"
-        )
+        self.resource = resource
+        self.aks_client = Utilities.create_client(subscription_id=subscription_id,resource=self.resource)
+        self.resource_client = Utilities.create_client(subscription_id, resource="resource_group")
+        self.subscription_name = Utilities.get_subscription_name(subscription_id=subscription_id)
+
         self.tmpl = Environment(loader=FileSystemLoader("templates"))
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
@@ -130,16 +128,14 @@ class AKSImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
+        if Utilities.skip_resources_from_settings(self.subscription_name, self.resource):
+            logger.info(f"Skipping Resources {self.resource} from subscription account {self.subscription_name}. For more info check utils/settings.py\n Exitting.")
+            sys.exit(1)
+
         Utilities.generate_tf_provider(self.local_repo_path)
-        Utilities.run_terraform_cmd(
-            ["terraform", f"-chdir={self.local_repo_path}", "init"]
-        )
+        Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "init"])
 
         aks_clusters = self.describe_aks_cluster()
         self.generate_import_blocks(aks_clusters)
-        Utilities.run_terraform_cmd(
-            ["terraform", f"-chdir={self.local_repo_path}", "fmt"]
-        )
-        Utilities.run_terraform_cmd(
-            ["terraform", f"-chdir={self.local_repo_path}", "plan"]
-        )
+        Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "fmt"])
+        Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "plan"])

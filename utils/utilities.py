@@ -5,10 +5,11 @@ import sys
 from jinja2 import Environment, FileSystemLoader
 import os
 from enum import Enum
+from .settings import SKIP_RESOURCE
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.containerservice import ContainerServiceClient
-from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 from azure.mgmt.sql import SqlManagementClient
 from azure.mgmt.rdbms.mysql import MySQLManagementClient
 from azure.mgmt.rdbms.mysql_flexibleservers import MySQLManagementClient as MySQLFlexibleManagementClient
@@ -33,7 +34,6 @@ class Utilities:
     def create_client(subscription_id, resource):
         try:
             credential = DefaultAzureCredential()
-            subscription_id = subscription_id
             if resource == "vms":
                 client = ComputeManagementClient(credential, subscription_id)
             elif resource == "aks":
@@ -57,6 +57,16 @@ class Utilities:
         except Exception as e:
             logger.error(f"Error occured: {e}")
             sys.exit(1)
+
+    @staticmethod
+    def get_subscription_name(subscription_id):
+            """
+            Get the name of the subscription from the subscription ID.
+            """
+            credential = DefaultAzureCredential()
+            subscription_client = SubscriptionClient(credential)
+            subscription = subscription_client.subscriptions.get(subscription_id)
+            return subscription.display_name
 
     def run_terraform_cmd(cmd):
         print(cmd)
@@ -86,3 +96,12 @@ class Utilities:
 
         with open(output_file_path, "w") as f:
             f.write(rendered_template)
+
+    @staticmethod
+    def skip_resources_from_settings(subscription_name, resource):
+        try:
+            if subscription_name in SKIP_RESOURCE[resource]:
+                return True
+        except KeyError:
+            return False
+        return False

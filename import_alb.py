@@ -16,6 +16,8 @@ class ALBImportSetUp:
         self.resource = resource
         if resource in ["lbgw", "lb"]:
             self.lb_client = Utilities.create_client(subscription_id=subscription_id, resource=self.resource)
+        self.subscription_name = Utilities.get_subscription_name(subscription_id=subscription_id)
+
         self.tmpl = Environment(loader=FileSystemLoader("templates"))
         self.local_repo_path = local_repo_path
         self.subscription_id = subscription_id
@@ -84,6 +86,11 @@ class ALBImportSetUp:
                 load_balancer_tags = load_balancer.tags or {}
                 if not self._tags_match(load_balancer_tags):
                     continue
+
+                # if load balancer name contains kubernetes, skip it.
+                if "kubernetes" in load_balancer.name:
+                   logger.info(f"Skipping LoadBalancer: {load_balancer.name}, It's being Managed by Kubernetes Cluster")
+                   continue
 
                 backend_pools = [
                     {"name": pool.name, "id": pool.id}
@@ -173,6 +180,10 @@ class ALBImportSetUp:
         """
         Setup the WorkFlow Steps.
         """
+        if Utilities.skip_resources_from_settings(self.subscription_name, self.resource):
+            logger.info(f"Skipping Resources {self.resource} from subscription account {self.subscription_name}. For more info check utils/settings.py\n Exitting.")
+            sys.exit(1)
+
         Utilities.generate_tf_provider(self.local_repo_path)
         Utilities.run_terraform_cmd(["terraform", f"-chdir={self.local_repo_path}", "init"])
 

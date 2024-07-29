@@ -28,4 +28,4 @@ if __name__ == "__main__":
         alb_import = ALBImportSetUp(subscription_id=args.subscription_id, resource=args.resource, local_repo_path=args.local_repo_path, filters=args.tag)
         alb_import.set_everything()
     else:
-        logger.info(f"Import Currently Supported for {args.resource}")
+        logger.info(f"Import Currently not Supported for {args.resource}")
