@@ -1,8 +1,5 @@
 import re
-import sys
 from loguru import logger
-import os
-import subprocess
 
 # Define the RESOURCE_CLEANUP dictionary with patterns properly escaped
 RESOURCE_CLEANUP = {
@@ -107,13 +104,8 @@ def process_terraform_plan(input_file):
 
         # Process lines within a resource block
         if in_resource_block and current_resource_type:
-            if current_resource_type == "azurerm_mssql_server": #Special Case for Jsonencode Skipping decimal in version number fix
-                if "jsonencode(12)" in line:
-                    line = 'version      = "12.0"\n'
-
-            if current_resource_type == "azurerm_application_gateway": #Special Case for Jsonencode Skipping decimal in version number fix
-                if "jsonencode(3)" in line:
-                    line = 'rule_set_version      = "3.0"\n'
+            if current_resource_type in ["azurerm_mssql_server", "azurerm_application_gateway", "azurerm_virtual_machine_extension"]: #Special Case for Jsonencode Skipping decimal in version number fix
+                line = replace_jsonencode_in_file(line)
 
             if current_resource_type == "azurerm_application_gateway": #Special Case for preserving min_capacity = 0
                 if "min_capacity" in line:
@@ -135,14 +127,6 @@ def process_terraform_plan(input_file):
                 if "idle_timeout_in_minutes" in line:
                     line = 'idle_timeout_in_minutes = 30\n'
 
-            if current_resource_type == "azurerm_virtual_machine_extension":
-                if "jsonencode(1)" in line:
-                    line = 'type_handler_version      = "1.0"\n'
-                if "jsonencode(2)" in line:
-                    line = 'type_handler_version      = "2.0"\n'
-                if "jsonencode(3)" in line:
-                    line = 'type_handler_version      = "3.0"\n'
-
             if should_remove_line(line, current_resource_type):
                 continue
         new_lines.append(line)
@@ -153,6 +137,14 @@ def process_terraform_plan(input_file):
 
     logger.info(f"Generated Cleaned up File: {input_file}")
 
+
+def replace_jsonencode_in_file(line):
+    # Regular expression pattern to match 'jsonencode(x)' where x is digit number
+    pattern = re.compile(r'jsonencode\((\d+)\)')
+
+    # Replace 'jsonencode(x)' with 'x.0'
+    modified_line = pattern.sub(lambda match: f'"{match.group(1)}.0"', line)
+    return modified_line
 
 def cleanup_tf_plan_file(input_tf_file):
 
