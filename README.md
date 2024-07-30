@@ -15,7 +15,7 @@ It's using Azure SDK & Jinja Templates to achieve it's state.
 
 * DB
 
-    * MSSQL Instance
+    * SQL Instance
     * MYSQL Instance
     * Postgresql Instance
     * Databases
@@ -101,6 +101,7 @@ if everything is setup properly you will see output similar to above
     ├── __init__.py
     ├── cleanup.py
     └── utilities.py
+    └── settings.py
 |
 ```
 
@@ -176,6 +177,41 @@ python main.py --resource lb  --subscription-id <--subscription-id of the azure>
 ```
 
 
+## Resource Cleanup
+* Null value, empty tags, empty list, 0 values are being cleaned up from all of the resources.
+* `jsonencode` func removes decimal which is being corrected for some resources.
+* `client_id`, `admin_password` is being set to `Ericsson@123` to prevent breaking.
+* More details can be seen in the dict `RESOURCE_CLEANUP` defined in `utils/cleanup.py` file.
+
+
+## Skip Resources
+* Skip DNS records for VMS, it's being managed by other teams.
+* Skip Paramater configurations of AZURE DB(SQL, MYSQL, POSTGRESQL), It's being managed by other teams.
+
+## Skip Subscription ID
+Below are some resources that are being skipped for some subscription id, it was provided during the session.
+This feature is supported through file in `utils/settings.py` file.
+Load Balancer in these accounts are being skipped as they all  are managed by Azure Kubernetes and shouldn't be imported with Terraform.
+
+| AKS                                    | VMS                                  | LB                                     |
+|----------------------------------------|--------------------------------------|----------------------------------------|
+| EitDataAndAnalyticsPlatformProd        | BusLighthouse1Test                   | EitDataAndAnalyticsPlatformProd        |
+| AzureAutomationAIMarketPlacebuddybotProd01 | EitDataAndAnalyticsPlatformProd       | AzureAutomationAIMarketPlacebuddybotProd01 |
+| EITEricssonDotComAcc                   | EITVirtualWorkspaceERSEU             | BusSpainAteneaProd                     |
+| EitA2CockpitTestEU                     | EITVirtualWorkspaceProdAM            | EITEricssonDotComAcc                   |
+| BusLighthouse1Test                     | EITVirtualWorkspaceProdAS            | BusLighthouse1Test                     |
+|                                        | EITVirtualWorkspaceProdEU            | EitA2CockpitTestEU                     |
+
 
 ## Current Issue
-*
+* `admin_password` for windows machine in resource `azurerm_windows_virtual_machine` is a required and sensitive field. It is set to string `Ericsson@123` during cleanup so that `terraform plan` continues without breaking. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
+
+* `client_secret` for azure kubernetes service in resource `azurerm_kubernetes_cluster` is a required and sensitive param. It is set to string `Ericsson@123` during Cleanup so that `terraform plan`  can continues without breaking. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
+
+* `data` param for `authentication_certificate` section for resource `authentication_certificate` is a required and sensitive param. if you don't want to manage these from terraform code due to sensitive nature, you can remove `authentication_certificate` section and add it ignore in `lifecycle` block.
+```
+  lifecycle {
+    ignore_changes = [authentication_certificate, ssl_certificate]
+  }
+```
+

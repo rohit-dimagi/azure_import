@@ -7,10 +7,11 @@ from import_alb import ALBImportSetUp
 from loguru import logger
 
 if __name__ == "__main__":
+    supported_resources = ["vms", "aks", "lb", "lbgw", "sql", "mysql", "postgresql"]
     parser = argparse.ArgumentParser(description="TF Import Script")
     parser.add_argument( "--subscription-id",dest="subscription_id",help="Azure Subscription ID ",type=str,required=True,)
     parser.add_argument("--local-repo-path",dest="local_repo_path",help="Local Repo Path",type=str,required=True,)
-    parser.add_argument("--resource", dest="resource", help="Azure Resource", type=str, required=True)
+    parser.add_argument("--resource", dest="resource", help="Azure Resource", type=str, required=True, choices=supported_resources)
     parser.add_argument("--tag",action="append",nargs=2, metavar=("key", "value"),help="Specify a tag filter as key value pair, e.g. -t TF_MANAGED true -t env dev")
 
     args = parser.parse_args()
