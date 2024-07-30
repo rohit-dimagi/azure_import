@@ -35,6 +35,11 @@ class ALBImportSetUp:
                 return False
         return True
 
+    # Remove starting digit from resource name, for some reason import block doesn't like resource name starting from digit.
+    def remove_leading_digits(self, name):
+        """Remove leading digits from the input string."""
+        return ''.join(filter(lambda x: not x.isdigit(), name.lstrip('0123456789')))
+
     def get_alb_details(self):
         """
         Get details of all Azure Application Gateways in the subscription, applying tag filters.
@@ -57,7 +62,7 @@ class ALBImportSetUp:
                 for ip_config in gateway.frontend_ip_configurations:
                     if ip_config.public_ip_address:
                         public_ip = self.lb_client.public_ip_addresses.get(
-                            resource_group_name=gateway.resource_group,
+                            resource_group_name=(gateway.id).split('/')[4],
                             public_ip_address_name=ip_config.public_ip_address.id.split('/')[-1]
                         )
                         public_ip_info.append({
@@ -66,7 +71,7 @@ class ALBImportSetUp:
                         })
 
                 lbgw = {
-                    "lb_name": gateway.name,
+                    "lb_name": self.remove_leading_digits(gateway.name),
                     "lb_id": gateway.id,
                     "type": "gateway",
                     "public_ip": public_ip_info

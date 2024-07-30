@@ -114,12 +114,12 @@ def process_terraform_plan(input_file):
 
             if current_resource_type == "azurerm_windows_virtual_machine":
                 if "admin_password" in line:
-                    logger.error(f"admin_password is set to a random value :- Ericsson@123. Please Change it correct value before Running apply")
+                    logger.error(f"admin_password is set to a random value :- Ericsson@123. Please Change it to correct value before Running apply")
                     line = 'admin_password      = "Ericsson@123"\n'
 
             if current_resource_type == "azurerm_kubernetes_cluster":
                 if "client_secret" in line:
-                    logger.error(f"client_secret is set to a random value :- Ericsson@123. Please Change it correct value before Running apply")
+                    logger.error(f"client_secret is set to a random value :- Ericsson@123. Please Change it to correct value before Running apply")
                     line = 'client_secret      = "Ericsson@123"\n'
                 if "identity_ids" in line:
                     new_lines.append(line)
