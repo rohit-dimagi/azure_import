@@ -180,7 +180,19 @@ python main.py --resource lb  --subscription-id <--subscription-id of the azure>
 ## Resource Cleanup
 * Null value, empty tags, empty list, 0 values are being cleaned up from all of the resources.
 * `jsonencode` func removes decimal which is being corrected for some resources.
-* `client_id`, `admin_password` is being set to `Ericsson@123` to prevent breaking.
+
+* ##### Resource Specific Cleanup
+    * VMS
+        * `admin_password` is being set to `Ericsson@123` to prevent breaking of terraform plan.
+    * AKS
+        * `client_secret` is being set to `Ericsson@123` to prevent breaking of terraform plan.
+        * Empty `[]` for `identity_ids` is being preserve for Azure Kubernetes service.
+        * `idle_timeout_in_minutes` is being set to 30 min.
+    * Azure DB
+        * `max_size_gb`, `transparent_data_encryption_key_automatic_rotation_enabled`, `administrator_login` is being removed
+    * Load Balancer
+        * `ssl_certificate`(empty) is being remvoed from application gateway resource to prevent breaking of terraform plan
+
 * More details can be seen in the dict `RESOURCE_CLEANUP` defined in `utils/cleanup.py` file.
 
 
@@ -206,9 +218,9 @@ Load Balancer in these accounts are being skipped as they all  are managed by Az
 ## Current Issue
 * `admin_password` for windows machine in resource `azurerm_windows_virtual_machine` is a required and sensitive field. It is set to string `Ericsson@123` during cleanup so that `terraform plan` continues without breaking. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
 
-* `client_secret` for azure kubernetes service in resource `azurerm_kubernetes_cluster` is a required and sensitive param. It is set to string `Ericsson@123` during Cleanup so that `terraform plan`  can continues without breaking. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
+* `client_secret` for `service_principal` in azure kubernetes service for resource `azurerm_kubernetes_cluster` is a required and sensitive param. It is set to string `Ericsson@123` during Cleanup so that `terraform plan` can continues without breaking. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
 
-* `data` param for `authentication_certificate` section for resource `authentication_certificate` is a required and sensitive param. if you don't want to manage these from terraform code due to sensitive nature, you can remove `authentication_certificate` section and add it ignore in `lifecycle` block.
+* `data` param for `authentication_certificate` section for resource `authentication_certificate` is a required and sensitive param. It breaks during terraform plan phase and you need to manually fix it by manually editing it out. if you don't want to manage these from terraform code due to sensitive nature, you can remove `authentication_certificate` section and add it ignore in `lifecycle` block.
 ```
   lifecycle {
     ignore_changes = [authentication_certificate, ssl_certificate]
