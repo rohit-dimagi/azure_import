@@ -34,9 +34,18 @@ import {
 }
 {% endfor %}
 
+
+{% if os_type == "linux" %}
+  {% set allowed_extensions = ["AzureMonitorLinuxAgent", "DataDiskMounting", "LinuxDiagnostic", "enablevmaccess", "CustomScriptExtension", "AzurePerformanceDiagnosticsLinux", "AzureDiskEncryptionForLinux", "MDE-Linux"] %}
+{% elif os_type == "windows" %}
+  {% set allowed_extensions = ["AzureDiskEncryption", "HybridWorkerExtension", "AzurePerformanceDiagnostics", "CustomScriptExtension_2016", "CustomScriptExtension", "enablevmaccess", "joindomain", "Microsoft.Insights.VMDiagnosticsSettings", "SqlIaasExtension", "MDE.Windows"] %}
+{% endif %}
+
 {% for extension in extensions %}
-import {
-  to = azurerm_virtual_machine_extension.{{ vm_name }}_{{ extension.name | replace('.', '-') }}
-  id = "{{ extension.id }}"
-}
+  {% if extension.name.lower() in allowed_extensions | map('lower') %}
+    import {
+      to = azurerm_virtual_machine_extension.{{ vm_name }}_{{ extension.name | replace('.', '-') }}
+      id = "{{ extension.id }}"
+    }
+  {% endif %}
 {% endfor %}
