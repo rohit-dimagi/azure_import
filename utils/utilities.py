@@ -16,6 +16,7 @@ from azure.mgmt.rdbms.mysql_flexibleservers import MySQLManagementClient as MySQ
 from azure.mgmt.rdbms.postgresql import PostgreSQLManagementClient
 from azure.mgmt.rdbms.postgresql_flexibleservers import PostgreSQLManagementClient as PostgreSQLFlexibleManagementClient
 from azure.mgmt.network import NetworkManagementClient
+from azure.mgmt.storage import StorageManagementClient
 
 class SkipTag(Enum):
     """
@@ -50,6 +51,8 @@ class Utilities:
                 client = NetworkManagementClient(credential, subscription_id)
             elif resource == "resource_group":
                 client = ResourceManagementClient(credential, subscription_id)
+            elif resource == "azureblob":
+                client = StorageManagementClient(credential, subscription_id)
             else:
                 raise ValueError(f"Unsupported resource type: {resource}")
 

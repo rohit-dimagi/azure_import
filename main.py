@@ -4,10 +4,13 @@ from import_vm import VMSImportSetUp
 from import_aks import AKSImportSetUp
 from import_azuredb import AzureDBImportSetUp
 from import_alb import ALBImportSetUp
+from import_azure_blob import StorageAccountImportSetUp
 from loguru import logger
 
 if __name__ == "__main__":
-    supported_resources = ["vms", "aks", "lb", "lbgw", "sql", "mysql", "postgresql"]
+    # Supported Resources for Azure
+    supported_resources = ["vms", "aks", "lb", "lbgw", "sql", "mysql", "postgresql", "azureblob"]
+
     parser = argparse.ArgumentParser(description="TF Import Script")
     parser.add_argument( "--subscription-id",dest="subscription_id",help="Azure Subscription ID ",type=str,required=True,)
     parser.add_argument("--local-repo-path",dest="local_repo_path",help="Local Repo Path",type=str,required=True,)
@@ -27,6 +30,9 @@ if __name__ == "__main__":
         azuredb_import.set_everything()
     elif args.resource in ["lbgw", "lb"]:
         alb_import = ALBImportSetUp(subscription_id=args.subscription_id, resource=args.resource, local_repo_path=args.local_repo_path, filters=args.tag)
+        alb_import.set_everything()
+    elif args.resource == "azureblob":
+        alb_import = StorageAccountImportSetUp(subscription_id=args.subscription_id, resource=args.resource, local_repo_path=args.local_repo_path, filters=args.tag)
         alb_import.set_everything()
     else:
         logger.info(f"Import Currently not Supported for {args.resource}")

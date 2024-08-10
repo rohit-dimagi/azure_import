@@ -34,6 +34,8 @@ It's using Azure SDK & Jinja Templates to achieve it's state.
     * Backend Pools
     * Listeners
 
+* Azure Storage Account
+
 
 ### Local Setup
 
@@ -176,6 +178,11 @@ python main.py --resource lb  --subscription-id <--subscription-id of the azure>
 
 ```
 
+* Import All Azure Storage Account from a particular azure subscription id
+```
+python main.py --resource azureblob --subscription-id <--subscription-id of the azure> --local-repo-path <dir to put the generated files>
+
+```
 
 ## Resource Cleanup
 * Null value, empty tags, empty list, 0 values are being cleaned up from all of the resources.
