@@ -1,3 +1,6 @@
+#### Date: 12-08-2024
+ * 911fd5f: Added Azure Account storage support
+
 #### Date: 30-07-2024
  * 911fd5f: Added CHANGELOG.md file
 

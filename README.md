@@ -234,3 +234,32 @@ Load Balancer in these accounts are being skipped as they all  are managed by Az
   }
 ```
 
+* Importing VM instance which have been Restored/Copy from a backup produce an error and needs manual handling to resolve. it also has an open issue on provider github repo: https://github.com/hashicorp/terraform-provider-azurerm/issues/8794
+
+
+Error Message:-
+```
+Error: The "azurerm_windows_virtual_machine" resource doesn't support attaching OS Disks - please use the azurerm_virtual_machine resource instead.
+```
+```
+Error: The "azurerm_linux_virtual_machine" resource doesn't support attaching OS Disks - please use the azurerm_virtual_machine resource instead.
+```
+
+After running the python script, it will fail and you can follow these Steps to fix it:
+```
+$ cd import
+$ls
+generated-plan-import-azweulx1332.tf	import-azweulx1332.tf			providers.tf
+$ rm generated-plan-import-azweulx1332.tf
+$ cat import-azweulx1332.tf
+
+import {
+  to = azurerm_linux_virtual_machine.<machine_name> ====> update it to azurerm_virtual_machine
+  id = "< machine_id >"
+}
+...
+$ terraform plan -generate-config-out="generated-plan-import-azweulx1332.tf"
+
+```
+Needs to do manual cleanup of the generate file and can be imported after.
+
