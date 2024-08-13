@@ -227,6 +227,16 @@ Load Balancer in these accounts are being skipped as they all  are managed by Az
 
 * `client_secret` for `service_principal` in azure kubernetes service for resource `azurerm_kubernetes_cluster` is a required and sensitive param. It is set to string `Ericsson@123` during Cleanup so that `terraform plan` can continues without breaking. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
 
+* `log_analytics_workspace_id` in azure kubernetes service for resource `azurerm_kubernetes_cluster` is a required and sensitive param. This is coming up empty and breaking the plan. Please replace it with correct value. Since it's a sensitive value it shouldn't be hardcoded in terraform code.
+relevent section of the tf code:
+
+```
+   oms_agent {
+    log_analytics_workspace_id      = "" -> need to put correct value
+    msi_auth_for_monitoring_enabled = false
+  }
+```
+
 * `data` param for `authentication_certificate` section for resource `authentication_certificate` is a required and sensitive param. It breaks during terraform plan phase and you need to manually fix it by manually editing it out. if you don't want to manage these from terraform code due to sensitive nature, you can remove `authentication_certificate` section and add it ignore in `lifecycle` block.
 ```
   lifecycle {
