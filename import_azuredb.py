@@ -51,6 +51,11 @@ class AzureDBImportSetUp:
             mysql_flexible_servers = self.mysql_flexible_client.servers.list()
 
             for server in mysql_servers:
+                # Skip the server if it is stopped
+                if server.user_visible_state.lower() == "stopped":
+                    logger.info(f"Skipping stopped MySQL server: {server.name}")
+                    continue
+
                 # Check if the server matches the tag filters and skip if TF_IMPORTED=True
                 server_tags = server.tags or {}
                 if not self._tags_match(server_tags):
@@ -74,6 +79,11 @@ class AzureDBImportSetUp:
                 })
 
             for server in mysql_flexible_servers:
+                # Skip the server if it is stopped
+                if server.state.lower() == "stopped":
+                    logger.info(f"Skipping stopped MySQL server: {server.name}")
+                    continue
+
                 # Check if the server matches the tag filters and skip if TF_IMPORTED=True
                 server_tags = server.tags or {}
                 if not self._tags_match(server_tags):
@@ -102,6 +112,10 @@ class AzureDBImportSetUp:
             postgresql_flexible_servers = self.postgresql_flexible_client.servers.list()
 
             for server in postgresql_servers:
+                # Skip the server if it is stopped
+                if server.user_visible_state.lower() == "stopped":
+                    logger.info(f"Skipping stopped PostgreSQL server: {server.name}")
+                    continue
                 # Check if the server matches the tag filters and skip if TF_IMPORTED=True
                 server_tags = server.tags or {}
                 if not self._tags_match(server_tags):
@@ -126,6 +140,11 @@ class AzureDBImportSetUp:
 
             # PostgreSQL Flexible Server Databases
             for server in postgresql_flexible_servers:
+                # Skip the server if it is stopped
+                if server.state.lower() == "stopped":
+                    logger.info(f"Skipping stopped PostgreSQL Flexible server: {server.name}")
+                    continue
+
                 # Check if the server matches the tag filters and skip if TF_IMPORTED=True
                 server_tags = server.tags or {}
                 if not self._tags_match(server_tags):
@@ -152,6 +171,11 @@ class AzureDBImportSetUp:
             # Azure SQL Databases
             sql_servers = self.sql_client.servers.list()
             for server in sql_servers:
+                # Skip the server if it is stopped
+                if server.state.lower() == "stopped":
+                    logger.info(f"Skipping stopped SQL server: {server.name}")
+                    continue
+
                 # Check if the server matches the tag filters and skip if TF_IMPORTED=True
                 server_tags = server.tags or {}
                 if not self._tags_match(server_tags):
