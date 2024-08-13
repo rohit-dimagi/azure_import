@@ -14,6 +14,7 @@ import {
 
 
 {% if type == "load-balancer" %}
+{% set lb_name = lb_name | replace('.', '-') %}
 import {
     to = azurerm_lb.{{ lb_name }}
     id = "{{ lb_id }}"
